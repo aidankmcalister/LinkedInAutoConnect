@@ -9,8 +9,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-amount = int(input("Enter the amount of people to connect to: "))
+print("\n" + "=" * 50)
+print(" " * 10 + "Welcome to the LinkedIn Scraper!")
+print("=" * 50 + "\n")
+print("\nThis script will help you scrape LinkedIn profiles and automatically connect with them.")
+print("Please put your LinkedIn credentials in the .env file\n")
+print("="*50)
+
+while True:
+    try:
+        amount = int(input("\nEnter the amount of people to connect to: "))
+        break
+    except ValueError:
+        print("Please enter a valid number.")
+
 search_query = input("Enter the search query: ")
+print("\n" + "=" * 50)
 
 try:
     driver = webdriver.Chrome()
@@ -49,9 +63,6 @@ try:
             else:
                 break
 
-            # next_button = driver.find_element(
-            #     By.XPATH, "//button[@aria-label='Next']")
-
         if len(people) < amount:
             try:
                 wait = WebDriverWait(driver, 10)
@@ -62,7 +73,13 @@ try:
                 print(
                     f"An error occurred while trying to navigate to the next page: {e}")
                 break
-    print(people)
+    print("\n")
+    print("Results:\n")
+    max_name_length = max(len(name) for name in people) + 4
+    for index, name in enumerate(people, start=1):
+        status = "SENT"
+        print(f"{index}. {name:<{max_name_length}} {status}")
+    print("\n" + "="*50)
 
 except Exception as e:
     print(f"An error occurred: {e}")
