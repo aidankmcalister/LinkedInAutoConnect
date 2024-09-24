@@ -1,4 +1,4 @@
-# LinkedInAuthConnect
+# LinkedIn AutoConnect
 
 This script automates the process of sending connection requests on LinkedIn, helping you expand your professional network more efficiently.
 
