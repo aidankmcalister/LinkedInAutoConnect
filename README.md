@@ -12,8 +12,8 @@ This script automates the process of sending connection requests on LinkedIn, he
 ## Prerequisites
 
 - Python 3.7+
-- Selenium WebDriver
-- Chrome or Firefox browser
+- Chrome browser
+- ChromeDriver (Download from: https://googlechromelabs.github.io/chrome-for-testing/)
 
 ## Installation
 
