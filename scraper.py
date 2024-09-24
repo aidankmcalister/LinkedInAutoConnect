@@ -106,12 +106,13 @@ I'm Aidan, a junior software engineer seeking full-time work. As someone without
 
 Best,
 Aidan''')
-                    time.sleep(30)
+                    time.sleep(5)
 
                     # Send the connection request
-                    # send_button = driver.find_element(
-                    #     By.XPATH, "//button[contains(@aria-label, 'Send invitation')]")
-                    # send_button.click()
+                    send_button = driver.find_element(
+                        By.XPATH, "//button[contains(@aria-label, 'Send invitation')]")
+                    send_button.click()
+                    # print("Send button found", send_button)
 
                     # Wait for the request to be sent
                     time.sleep(2)
