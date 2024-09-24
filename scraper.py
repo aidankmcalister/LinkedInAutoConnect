@@ -6,6 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import os
 from dotenv import load_dotenv
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
 
 load_dotenv()
 
@@ -71,22 +73,22 @@ try:
                     By.XPATH, ".//span[@dir='ltr']").find_element(
                     By.XPATH, ".//span[@aria-hidden='true']").text
                 try:
-                    # Click the "Connect" button
-                    # connect_button = driver.find_element(
-                    #     (By.XPATH, ".//div[contains(@class, 'entity-result__actions')]//button[contains(text(), 'Connect')]"))
-                    connect_container = person.find_element(
-                        By.CLASS_NAME, "entity-result__actions")
-                    print("connect_container", connect_container)
-
-                    connect_button = WebDriverWait(driver, 10).until(
+                    # Find the connect button within the current person's container
+                    connect_button = WebDriverWait(person, 10).until(
                         EC.presence_of_element_located(
-                            (By.CSS_SELECTOR, "button.artdeco-button--secondary"))
+                            (By.XPATH, ".//button[contains(@aria-label, 'Invite') or contains(@aria-label, 'Connect')]"))
                     )
-                    connect_button.click()
-                    print("connect_button", connect_button)
 
-                    time.sleep(10)
-                    connect_button.click()
+                    # Scroll the button into view
+                    driver.execute_script(
+                        "arguments[0].scrollIntoView({block: 'center'});", connect_button)
+
+                    # Wait for a moment to allow any animations to complete
+                    time.sleep(2)
+
+                    # Try to click the button using ActionChains
+                    ActionChains(driver).move_to_element(
+                        connect_button).click().perform()
 
                     # Wait for the popup to appear
                     wait = WebDriverWait(driver, 10)
@@ -98,14 +100,12 @@ try:
                     note_textarea = wait.until(
                         EC.presence_of_element_located((By.NAME, "message")))
                     note_textarea.send_keys(
-                        f'''Hi {name},
+                        f'''Hi {name.split()[0]},
 
-                        I hope you're doing well. My name is Aidan, and I'm a junior software engineer with some part-time and contract experience. I'm currently looking to transition into a full-time role and would love to hear your thoughts on navigating the job market, especially as someone without a traditional degree.
+I'm Aidan, a junior software engineer seeking full-time work. As someone without a traditional degree, I'd love your insights on navigating the job market. Could we chat briefly about your experience? Thanks!
 
-                        If you have a few moments to chat, I'd really appreciate the chance to learn from your experience. Looking forward to hearing from you!
-
-                        Best,
-                        Aidan''')
+Best,
+Aidan''')
                     time.sleep(30)
 
                     # Send the connection request
@@ -116,9 +116,9 @@ try:
                     # Wait for the request to be sent
                     time.sleep(2)
                     status = "✅"
-                except Exception as e:
+                except (ElementClickInterceptedException, TimeoutException) as e:
                     status = "❌"
-                    print(f"Error: {e}")
+                    print(f"Error connecting to {name}: {e}")
                 people.append((name, status))
             else:
                 break
