@@ -4,39 +4,26 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-import os
-from dotenv import load_dotenv
+import json
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
 
-load_dotenv()
+with open('info.json', 'r') as f:
+    info = json.load(f)
 
 print("\n" + "=" * 50)
 print(" " * 10 + "Welcome to the LinkedIn Scraper!")
 print("=" * 50 + "\n")
-print("\nThis script will help you scrape LinkedIn profiles and automatically connect with them.")
-print("Please put your LinkedIn credentials in the .env file\n")
-print("="*50)
+print("\nThis script will help you scrape LinkedIn profiles and automatically connect with them.\n")
+print("--"*50)
 
-northeast_geourns = "%2C".join([
-    "104597301",  # Maine
-    "103506248",  # New Hampshire
-    "105677329",  # Vermont
-    "100506914",  # Massachusetts
-    "104150334",  # Rhode Island
-    "100448276",  # Connecticut
-    "105080838"   # New York
-])
+northeast_geourns = "%2C".join(info['geourns']['northeast'])
 
-while True:
-    try:
-        amount = int(input("\nEnter the amount of people to connect to: "))
-        break
-    except ValueError:
-        print("Please enter a valid number.")
+amount = info['amount_to_connect']
+search_query = info['search_query']
 
-search_query = input("Enter the search query: ")
-print("\n" + "=" * 50)
+print(f"\nConnecting to {amount} people with search query: {search_query}")
+print("\n" + "-" * 50)
 
 try:
     driver = webdriver.Chrome()
@@ -44,10 +31,10 @@ try:
     driver.get('https://www.linkedin.com/login')
 
     email = driver.find_element(By.ID, 'username')
-    email.send_keys(os.getenv('LINKEDIN_EMAIL'))
+    email.send_keys(info['linkedin_credentials']['email'])
 
     password = driver.find_element(By.ID, 'password')
-    password.send_keys(os.getenv('LINKEDIN_PASSWORD'))
+    password.send_keys(info['linkedin_credentials']['password'])
     password.send_keys(Keys.RETURN)
 
     time.sleep(15)
@@ -75,47 +62,34 @@ try:
                     By.XPATH, ".//span[@dir='ltr']").find_element(
                     By.XPATH, ".//span[@aria-hidden='true']").text
                 try:
-                    # Find the connect button within the current person's container
                     connect_button = WebDriverWait(person, 10).until(
                         EC.presence_of_element_located(
                             (By.XPATH, ".//button[contains(@aria-label, 'Invite') or contains(@aria-label, 'Connect')]"))
                     )
 
-                    # Scroll the button into view
                     driver.execute_script(
                         "arguments[0].scrollIntoView({block: 'center'});", connect_button)
 
-                    # Wait for a moment to allow any animations to complete
                     time.sleep(1)
 
-                    # Try to click the button using ActionChains
                     ActionChains(driver).move_to_element(
                         connect_button).click().perform()
 
-                    # Wait for the popup to appear
                     wait = WebDriverWait(driver, 10)
                     add_note_button = wait.until(EC.element_to_be_clickable(
                         (By.XPATH, "//button[@aria-label='Add a note']")))
                     add_note_button.click()
 
-                    # Type the note
                     note_textarea = wait.until(
                         EC.presence_of_element_located((By.NAME, "message")))
                     note_textarea.send_keys(
-                        f'''Hi {name.split()[0]},
-
-I'm Aidan, a junior software engineer seeking full-time work. As someone without a traditional degree, I'd love your insights on navigating the job market. Could we chat briefly about your experience? Thanks!
-
-Best,
-Aidan''')
+                        info['connection_message'].format(first_name=name.split()[0]))
                     time.sleep(1)
-                    # Send the connection request
+
                     send_button = driver.find_element(
                         By.XPATH, "//button[contains(@aria-label, 'Send invitation')]")
                     send_button.click()
-                    # print("Send button found", send_button)
 
-                    # Wait for the request to be sent
                     time.sleep(1)
                     status = "✅"
                     successful_connections += 1
@@ -136,9 +110,9 @@ Aidan''')
                 driver.get(next_page_url)
                 time.sleep(3)
             except Exception as e:
-                print(
-                    f"NEXT BUTTON ERROR: {e}")
+                print(f"NEXT BUTTON ERROR: {e}")
                 break
+
     print("\n")
     print("Results:\n")
     max_name_length = max(len(name) for name, _ in people) + 4

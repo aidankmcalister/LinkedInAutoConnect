@@ -1,0 +1,20 @@
+{
+  "search_query": "",
+  "amount_to_connect": 10,
+  "linkedin_credentials": {
+    "email": "",
+    "password": ""
+  },
+  "geourns": {
+    "northeast": [
+      "104597301",
+      "103506248",
+      "105677329",
+      "100506914",
+      "104150334",
+      "100448276",
+      "105080838"
+    ]
+  },
+  "connection_message": ""
+}
