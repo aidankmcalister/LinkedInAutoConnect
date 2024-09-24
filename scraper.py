@@ -59,14 +59,16 @@ try:
 
     people = []
     current_page = 1
+    successful_connections = 0
+    failed_connections = 0
 
-    while len(people) < amount:
+    while successful_connections < amount:
         wait = WebDriverWait(driver, 10)
         peopleList = wait.until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, "reusable-search__result-container")))
 
         for person in peopleList:
-            if len(people) < amount:
+            if successful_connections < amount:
                 name_parent = person.find_element(
                     By.CLASS_NAME, "entity-result__title-text")
                 name = name_parent.find_element(
@@ -84,7 +86,7 @@ try:
                         "arguments[0].scrollIntoView({block: 'center'});", connect_button)
 
                     # Wait for a moment to allow any animations to complete
-                    time.sleep(2)
+                    time.sleep(1)
 
                     # Try to click the button using ActionChains
                     ActionChains(driver).move_to_element(
@@ -106,8 +108,7 @@ I'm Aidan, a junior software engineer seeking full-time work. As someone without
 
 Best,
 Aidan''')
-                    time.sleep(5)
-
+                    time.sleep(1)
                     # Send the connection request
                     send_button = driver.find_element(
                         By.XPATH, "//button[contains(@aria-label, 'Send invitation')]")
@@ -115,16 +116,19 @@ Aidan''')
                     # print("Send button found", send_button)
 
                     # Wait for the request to be sent
-                    time.sleep(2)
+                    time.sleep(1)
                     status = "✅"
+                    successful_connections += 1
                 except (ElementClickInterceptedException, TimeoutException) as e:
-                    status = "❌"
                     print(f"Error connecting to {name}: {e}")
+                    status = "❌"
+                    failed_connections += 1
+
                 people.append((name, status))
             else:
                 break
 
-        if len(people) < amount:
+        if successful_connections < amount:
             try:
                 current_page += 1
                 next_page_url = f'https://www.linkedin.com/search/results/people/?geoUrn=%5B{
@@ -140,6 +144,10 @@ Aidan''')
     max_name_length = max(len(name) for name, _ in people) + 4
     for index, (name, status) in enumerate(people, start=1):
         print(f"{index}. {name:<{max_name_length}} {status}")
+    print("\n" + "="*50)
+
+    print(f"\nFailed connections (❌): {failed_connections}")
+    print(f"Successful connections (✅): {successful_connections}")
     print("\n" + "="*50)
 
 except Exception as e:
