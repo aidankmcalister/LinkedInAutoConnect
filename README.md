@@ -33,6 +33,8 @@ This script automates the process of sending connection requests on LinkedIn, he
 
 ## Usage
 
+_0. Make sure ChromeDriver is in your root directory._
+
 1. Configure the script by editing `config.py`:
 
    - Set your LinkedIn credentials
