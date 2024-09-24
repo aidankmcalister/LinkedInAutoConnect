@@ -15,7 +15,7 @@ print("\n" + "=" * 50)
 print(" " * 10 + "Welcome to the LinkedIn Scraper!")
 print("=" * 50 + "\n")
 print("\nThis script will help you scrape LinkedIn profiles and automatically connect with them.\n")
-print("--"*50)
+print("-"*50)
 
 northeast_geourns = "%2C".join(info['geourns']['northeast'])
 
@@ -54,6 +54,8 @@ try:
         peopleList = wait.until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, "reusable-search__result-container")))
 
+        connectible_profiles = 0
+
         for person in peopleList:
             if successful_connections < amount:
                 name_parent = person.find_element(
@@ -62,10 +64,11 @@ try:
                     By.XPATH, ".//span[@dir='ltr']").find_element(
                     By.XPATH, ".//span[@aria-hidden='true']").text
                 try:
-                    connect_button = WebDriverWait(person, 10).until(
+                    connect_button = WebDriverWait(person, 3).until(
                         EC.presence_of_element_located(
                             (By.XPATH, ".//button[contains(@aria-label, 'Invite') or contains(@aria-label, 'Connect')]"))
                     )
+                    connectible_profiles += 1
 
                     driver.execute_script(
                         "arguments[0].scrollIntoView({block: 'center'});", connect_button)
@@ -94,15 +97,17 @@ try:
                     status = "✅"
                     successful_connections += 1
                 except (ElementClickInterceptedException, TimeoutException) as e:
-                    print(f"Error connecting to {name}: {e}")
-                    status = "❌"
-                    failed_connections += 1
+                    print(f"Skipping {name}: No connect button found")
+                    continue
 
-                people.append((name, status))
-            else:
-                break
-
-        if successful_connections < amount:
+        if connectible_profiles == 0:
+            print("No connectible profiles found on this page. Moving to next page.")
+            current_page += 1
+            next_page_url = f'https://www.linkedin.com/search/results/people/?geoUrn=%5B{
+                northeast_geourns}%5D&keywords={search_query}&origin=FACETED_SEARCH&sid=!.@&page={current_page}'
+            driver.get(next_page_url)
+            time.sleep(3)
+        elif successful_connections < amount:
             try:
                 current_page += 1
                 next_page_url = f'https://www.linkedin.com/search/results/people/?geoUrn=%5B{
@@ -112,17 +117,21 @@ try:
             except Exception as e:
                 print(f"NEXT BUTTON ERROR: {e}")
                 break
-
+        else:
+            break
     print("\n")
     print("Results:\n")
-    max_name_length = max(len(name) for name, _ in people) + 4
-    for index, (name, status) in enumerate(people, start=1):
-        print(f"{index}. {name:<{max_name_length}} {status}")
-    print("\n" + "="*50)
+    if people:
+        max_name_length = max(len(name) for name, _ in people) + 4
+        for index, (name, status) in enumerate(people, start=1):
+            print(f"{index}. {name:<{max_name_length}} {status}")
+        print("\n" + "="*50)
 
-    print(f"\nFailed connections (❌): {failed_connections}")
-    print(f"Successful connections (✅): {successful_connections}")
-    print("\n" + "="*50)
+        print(f"\nFailed connections (❌): {failed_connections}")
+        print(f"Successful connections (✅): {successful_connections}")
+        print("\n" + "="*50)
+    else:
+        print("No results to display.")
 
 except Exception as e:
     print(f"An error occurred: {e}")
